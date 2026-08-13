@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#12091f">
+  <title>Tarot Reader</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      display:grid;
+      place-items:center;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",sans-serif;
+      color:#f5ecff;
+      background:
+        radial-gradient(circle at 50% 25%,rgba(134,79,190,.24),transparent 34%),
+        linear-gradient(160deg,#0b0711,#171022 60%,#0b0711);
+    }
+    .card{
+      width:min(92vw,520px);
+      padding:28px 22px;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:22px;
+      background:rgba(255,255,255,.055);
+      box-shadow:0 24px 60px rgba(0,0,0,.35);
+      text-align:center;
+    }
+    h1{margin:0 0 10px;font-size:24px}
+    p{margin:0 0 22px;color:#cbbddc;line-height:1.65;font-size:14px}
+    .buttons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    a{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-width:145px;padding:12px 16px;border-radius:12px;
+      color:white;text-decoration:none;font-weight:800;
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(135deg,#6f3caf,#a64f9d);
+    }
+    a.secondary{background:rgba(255,255,255,.08)}
+    small{display:block;margin-top:18px;color:#978aa8;font-size:11px}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Tarot Reader</h1>
+    <p id="status">기기에 맞는 화면을 여는 중입니다.</p>
+    <div class="buttons">
+      <a href="./mobile.html">모바일 버전</a>
+      <a class="secondary" href="./pc.html">PC 버전</a>
+    </div>
+    <small>자동 이동이 되지 않으면 원하는 버전을 선택하세요.</small>
+  </main>
+
+  <script>
+    (function(){
+      function isMobileDevice(){
+        var ua = navigator.userAgent || "";
+        var touchMac = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+        return /Android|iPhone|iPod|Mobile/i.test(ua) || touchMac;
+      }
+
+      var params = new URLSearchParams(location.search);
+      var forced = params.get("mode");
+      var target = forced === "pc" ? "./pc.html"
+                 : forced === "mobile" ? "./mobile.html"
+                 : isMobileDevice() ? "./mobile.html"
+                 : "./pc.html";
+
+      document.getElementById("status").textContent =
+        target.indexOf("mobile") >= 0 ? "모바일 화면으로 이동합니다." : "PC 화면으로 이동합니다.";
+
+      window.setTimeout(function(){
+        location.replace(target);
+      }, 320);
+    })();
+  </script>
+</body>
+</html>
