@@ -1567,7 +1567,79 @@
       filter: grayscale(.28);
     }
 
-  </style>
+  
+
+    /* ===== 보조 카드 3장 선택 ===== */
+    .clarifier-pick-note {
+      margin: 4px 0 14px;
+      color: #cfc3df;
+      font-size: 13px;
+      line-height: 1.6;
+      text-align: center;
+    }
+    .clarifier-pick-three {
+      width: min(520px, 100%);
+      margin: 14px auto 4px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(92px, 132px));
+      justify-content: center;
+      gap: 16px;
+    }
+    .clarifier-pick-three .clarifier-choice {
+      position: relative;
+      width: 100%;
+      min-height: 0;
+      aspect-ratio: .58;
+      padding: 0;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 2px solid rgba(246,211,111,.34);
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255,255,255,.16), transparent 28%),
+        repeating-radial-gradient(circle at center, transparent 0 8px, rgba(255,255,255,.025) 9px 10px),
+        linear-gradient(145deg, #25164d, #55308c 52%, #28184f);
+      box-shadow: 0 12px 28px rgba(0,0,0,.38);
+      color: transparent;
+      cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+    .clarifier-pick-three .clarifier-choice::before {
+      content: "✦";
+      position: absolute;
+      inset: 12%;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,236,163,.45);
+      border-radius: 50%;
+      color: #f6d36f;
+      font-size: 30px;
+      text-shadow: 0 0 16px rgba(246,211,111,.45);
+    }
+    .clarifier-pick-three .clarifier-choice::after {
+      content: "TAROT";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 12%;
+      color: #f7e3a3;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-align: center;
+    }
+    .clarifier-pick-three .clarifier-choice:hover,
+    .clarifier-pick-three .clarifier-choice:focus-visible {
+      transform: translateY(-7px) scale(1.025);
+      border-color: rgba(255,230,140,.8);
+      box-shadow: 0 16px 34px rgba(0,0,0,.46), 0 0 0 3px rgba(246,211,111,.10);
+      outline: none;
+    }
+    @media (max-width: 560px) {
+      .clarifier-pick-three { gap: 9px; grid-template-columns: repeat(3, minmax(72px, 1fr)); }
+      .clarifier-pick-three .clarifier-choice::before { font-size: 24px; }
+    }
+
+</style>
 </head>
 <body>
 
@@ -4048,14 +4120,15 @@
       if (!revealed || !selectedCards[index]) return;
 
       clarifierTargetIndex = index;
-      const used = new Set(selectedCards.map(x=>x.card.id));
-      Object.entries(clarifiers).forEach(([k,x]) => {
-        // 같은 자리에서 다시 뽑을 때 기존 보조 카드는 다시 나올 수 없도록 제외한다.
-        used.add(x.card.id);
+      const used = new Set(selectedCards.map(function(x) { return x.card.id; }));
+      Object.keys(clarifiers).forEach(function(k) {
+        const x = clarifiers[k];
+        if (x && x.card) used.add(x.card.id);
       });
-      const remaining = deck.filter(card=>!used.has(card.id));
+
+      const remaining = deck.filter(function(card) { return !used.has(card.id); });
       const cfg = getCurrentSelectionConfig();
-      const step = cfg.steps?.[index] || (cfg.mode === "free" ? `${index+1}번째 카드` : `${index+1}번째 자리`);
+      const step = (cfg.steps && cfg.steps[index]) || (cfg.mode === "free" ? `${index + 1}번째 카드` : `${index + 1}번째 자리`);
 
       if (!remaining.length) {
         openFeatureModal(`보조 카드 · ${step}`, `<p class="feature-note">남아 있는 카드가 없습니다.</p>`);
@@ -4075,36 +4148,45 @@
         </div>`);
 
       const targetIndex = index;
-      setTimeout(() => {
+      window.setTimeout(function() {
         if (featureModal.hidden || clarifierTargetIndex !== targetIndex) return;
 
-        const randomCard = remaining[Math.floor(Math.random() * remaining.length)];
-        const reversed = Boolean(randomCard.reversed);
-        clarifiers[targetIndex] = { card: randomCard, reversed };
-
-        renderAutoReading();
-        drawResults();
+        const candidates = shuffle(remaining).slice(0, Math.min(3, remaining.length));
+        const buttons = candidates.map(function(card, pickIndex) {
+          return `<button type="button" class="clarifier-choice" data-clarifier-card="${card.id}" aria-label="보조 카드 후보 ${pickIndex + 1}">보조 카드 후보 ${pickIndex + 1}</button>`;
+        }).join("");
 
         featureModalBody.innerHTML = `
           <h2>${escapeHtml(`보조 카드 · ${step}`)}</h2>
-          <div class="clarifier-random-result">
-            <img class="${reversed ? "reversed" : ""}" src="${randomCard.imageUrl}" alt="${escapeHtml(randomCard.ko)}">
-            <strong>${escapeHtml(randomCard.ko)} · ${reversed ? "역방향" : "정방향"}</strong>
-            <div class="feature-note">처음 카드 섞기에서 방향이 미리 정해진 남은 덱 중 무작위로 선택된 보조 카드입니다.</div>
-            <div class="feature-actions"><button type="button" data-clarifier-close="1">확인</button></div>
-          </div>`;
+          <div class="clarifier-pick-note">셔플이 끝났습니다. 아래 카드 3장 중 마음이 가는 카드 한 장을 선택하세요.</div>
+          <div class="clarifier-pick-three">${buttons}</div>`;
       }, 1350);
     }
 
     function chooseClarifier(cardId) {
-      // 이전 직접 선택 방식과의 호환을 위한 함수. 새 UI에서는 사용하지 않는다.
       if (clarifierTargetIndex === null) return;
-      const card = deck.find(c=>String(c.id)===String(cardId));
+
+      const targetIndex = clarifierTargetIndex;
+      const card = deck.find(function(c) { return String(c.id) === String(cardId); });
       if (!card) return;
-      clarifiers[clarifierTargetIndex] = { card, reversed: Boolean(card.reversed) };
-      closeFeatureModal();
+
+      const reversed = Boolean(card.reversed);
+      clarifiers[targetIndex] = { card: card, reversed: reversed };
+
+      const cfg = getCurrentSelectionConfig();
+      const step = (cfg.steps && cfg.steps[targetIndex]) || (cfg.mode === "free" ? `${targetIndex + 1}번째 카드` : `${targetIndex + 1}번째 자리`);
+
       renderAutoReading();
       drawResults();
+
+      featureModalBody.innerHTML = `
+        <h2>${escapeHtml(`보조 카드 · ${step}`)}</h2>
+        <div class="clarifier-random-result">
+          <img class="${reversed ? "reversed" : ""}" src="${card.imageUrl}" alt="${escapeHtml(card.ko)}">
+          <strong>${escapeHtml(card.ko)} · ${reversed ? "역방향" : "정방향"}</strong>
+          <div class="feature-note">처음 카드 섞기에서 정해진 이 카드의 방향을 그대로 사용합니다.</div>
+          <div class="feature-actions"><button type="button" data-clarifier-close="1">확인</button></div>
+        </div>`;
     }
 
     function openEncyclopedia() {
@@ -4284,11 +4366,25 @@
 
       if (config.mode === "spread") {
         lines.push("스프레드", config.label, "");
+      } else if (config.dailyLove) {
+        lines.push("리딩", config.label, "");
       }
 
       selectedCards.forEach((item, index) => {
-        lines.push(`${index + 1}. ${item.card.ko} (${item.reversed ? "역방향" : "정방향"})`);
-        if (clarifiers[index]) lines.push(`   보조 카드: ${clarifiers[index].card.ko} (${clarifiers[index].reversed ? "역방향" : "정방향"})`);
+        const step = config.steps && config.steps[index] ? config.steps[index] : "";
+
+        if (step) {
+          lines.push(`${index + 1}. ${step}`);
+          lines.push(`   카드: ${item.card.ko} (${item.reversed ? "역방향" : "정방향"})`);
+        } else {
+          lines.push(`${index + 1}. ${item.card.ko} (${item.reversed ? "역방향" : "정방향"})`);
+        }
+
+        if (clarifiers[index]) {
+          lines.push(`   보조 카드: ${clarifiers[index].card.ko} (${clarifiers[index].reversed ? "역방향" : "정방향"})`);
+        }
+
+        if (index < selectedCards.length - 1) lines.push("");
       });
       return lines.join("\n");
     }
