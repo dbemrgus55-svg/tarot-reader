@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>타로 카드 선택기 v8 PC Spread Layout PC Spread Flow</title>
+  <title>타로 카드 선택기 PC V19</title>
   <style>
     :root {
       --card-w: 86px;
@@ -808,6 +808,165 @@
       color: #cfc6db;
       font-size: 11px;
       line-height: 1.5;
+    }
+
+
+    /* ===== 심층 패턴 분석 + 카드 구성 지표 ===== */
+    .analysis-wide {
+      grid-column: 1 / -1;
+      margin-top: 5px;
+      padding: 15px;
+      border-radius: 14px;
+      border: 1px solid rgba(246,211,111,.12);
+      background: rgba(9,6,16,.38);
+    }
+
+    .deep-analysis-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      color: #f5df9f;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .deep-analysis-title small {
+      color: #9f94b1;
+      font-size: 10px;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    .core-pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .core-pattern-card {
+      padding: 10px 11px;
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.035);
+    }
+
+    .core-pattern-card strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #efe2b5;
+      font-size: 11.5px;
+      line-height: 1.45;
+    }
+
+    .core-pattern-card span {
+      color: #d0c7db;
+      font-size: 11.5px;
+      line-height: 1.62;
+      word-break: keep-all;
+    }
+
+    .reading-indicator-note {
+      margin: -2px 0 11px;
+      color: #9f94b1;
+      font-size: 10.5px;
+      line-height: 1.55;
+    }
+
+    .indicator-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 9px;
+    }
+
+    .indicator-item {
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.035);
+    }
+
+    .indicator-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+
+    .indicator-label {
+      color: #f1e5bd;
+      font-size: 11.5px;
+      font-weight: 900;
+    }
+
+    .indicator-score {
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .indicator-score em {
+      margin-left: 4px;
+      color: #b8acc9;
+      font-size: 9px;
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    .indicator-track {
+      position: relative;
+      height: 7px;
+      margin-bottom: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+    }
+
+    .indicator-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(111,73,189,.9), rgba(246,211,111,.92));
+    }
+
+    .indicator-detail {
+      color: #cfc6da;
+      font-size: 10.5px;
+      line-height: 1.55;
+      word-break: keep-all;
+    }
+
+    .indicator-conclusion {
+      margin-top: 10px;
+      padding: 11px 12px;
+      border-radius: 11px;
+      border: 1px solid rgba(246,211,111,.15);
+      background: rgba(246,211,111,.06);
+      color: #e9e2ef;
+      font-size: 11.5px;
+      line-height: 1.65;
+      word-break: keep-all;
+    }
+
+    .indicator-conclusion strong {
+      color: #f6df97;
+    }
+
+    @media (max-width: 760px) {
+      .core-pattern-grid,
+      .indicator-grid {
+        grid-template-columns: 1fr;
+      }
+      .analysis-wide {
+        padding: 12px;
+      }
+      .deep-analysis-title {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 3px;
+      }
     }
 
     .auto-reading-copy-status {
@@ -1757,7 +1916,7 @@
       <div class="auto-reading-head">
         <div>
           <h2>자동 리딩</h2>
-          <p class="auto-reading-note">API 없이 이 기기에서 계산하는 규칙 기반 해석입니다. 카드의 정·역방향, 질문 분야, 선택 방식과 전체 구성을 함께 반영합니다.</p>
+          <p class="auto-reading-note">API 없이 이 기기에서 계산하는 규칙 기반 해석입니다. 정·역방향, 질문 분야, 자리 가중치, 반복 패턴과 카드 구성 지표를 함께 반영합니다.</p>
         </div>
         <button id="autoReadingCopyBtn" class="auto-reading-copy" type="button">자동 리딩 복사</button>
       </div>
@@ -3860,6 +4019,684 @@
       return score;
     }
 
+
+    const MINOR_RANK_ORDER = {
+      Ace: 1, Two: 2, Three: 3, Four: 4, Five: 5,
+      Six: 6, Seven: 7, Eight: 8, Nine: 9, Ten: 10
+    };
+
+    const MINOR_RANK_KO = {
+      Ace: "에이스", Two: "2", Three: "3", Four: "4", Five: "5",
+      Six: "6", Seven: "7", Eight: "8", Nine: "9", Ten: "10",
+      Page: "페이지", Knight: "기사", Queen: "퀸", King: "킹"
+    };
+
+    const COURT_RANKS = new Set(["Page", "Knight", "Queen", "King"]);
+
+    const CORE_OPPOSITION_READINGS = {
+      "The Moon|The Sun": "불확실성과 명료함이 동시에 등장해, 감정이나 상황을 보는 시선이 크게 엇갈릴 수 있습니다.",
+      "The Devil|The Lovers": "강한 끌림과 건강한 선택의 문제가 동시에 나타나므로 감정의 강도와 관계의 질을 분리해서 볼 필요가 있습니다.",
+      "The Hermit|Three of Cups": "혼자 정리하려는 흐름과 교류·만남의 흐름이 충돌해, 거리두기와 접촉 욕구가 함께 나타납니다.",
+      "Eight of Wands|Four of Swords": "멈춤과 빠른 움직임이 동시에 있어 연락·행동의 타이밍이 갑자기 바뀔 수 있는 구조입니다.",
+      "The Chariot|The Hanged Man": "기다림과 돌파가 맞부딪혀, 움직이고 싶은 의지와 현실적인 정체가 동시에 작용합니다.",
+      "The Star|The Tower": "무너짐과 회복이 함께 나타나 현재의 충격보다 이후 재정비 과정이 중요한 배열입니다.",
+      "Ten of Swords|The Sun": "강한 종료·피로 신호와 회복·명료함이 함께 있어, 끝낸 뒤 다시 밝아지는 전환 구조가 강조됩니다.",
+      "Five of Cups|Three of Cups": "상실감과 다시 교류하려는 흐름이 공존해, 과거 감정과 현재 접점 사이의 차이가 중요합니다."
+    };
+
+    function makeSignalSet(list) {
+      return new Set(list);
+    }
+
+    const READING_SIGNAL_GROUPS = {
+      positive: makeSignalSet([
+        "The Magician","The Empress","The Emperor","The Lovers","The Chariot","Strength",
+        "Wheel of Fortune","Justice","The Star","The Sun","Judgement","The World",
+        "Ace of Cups","Two of Cups","Ten of Cups","Ace of Pentacles","Nine of Pentacles",
+        "Ten of Pentacles","Four of Wands","Six of Wands"
+      ]),
+      action: makeSignalSet([
+        "The Fool","The Magician","The Emperor","The Chariot","Strength","Judgement",
+        "Ace of Wands","Page of Wands","Knight of Wands","Eight of Wands",
+        "Ace of Swords","Page of Swords","Knight of Swords","Knight of Cups"
+      ]),
+      fast: makeSignalSet([
+        "The Fool","The Chariot","Eight of Wands","Knight of Wands","Knight of Swords",
+        "Page of Wands","Ace of Wands"
+      ]),
+      slow: makeSignalSet([
+        "The High Priestess","The Hermit","The Hanged Man","Temperance",
+        "Two of Swords","Four of Swords","Seven of Pentacles","Knight of Pentacles"
+      ]),
+      silence: makeSignalSet([
+        "The High Priestess","The Hermit","The Hanged Man","Two of Swords",
+        "Four of Swords","Eight of Swords","Seven of Swords"
+      ]),
+      contact: makeSignalSet([
+        "The Magician","Judgement","Eight of Wands","Ace of Swords","Page of Swords",
+        "Knight of Swords","Page of Wands","Knight of Wands","Page of Cups","Knight of Cups"
+      ]),
+      relation: makeSignalSet([
+        "The Empress","The Lovers","The Hierophant","The Sun","The World",
+        "Ace of Cups","Two of Cups","Ten of Cups","Four of Wands",
+        "Page of Cups","Knight of Cups","Queen of Cups","King of Cups"
+      ]),
+      attachment: makeSignalSet([
+        "Judgement","The Devil","The Moon","Six of Cups","Five of Cups",
+        "Three of Swords","Four of Pentacles"
+      ]),
+      healing: makeSignalSet([
+        "Temperance","The Star","The Sun","Judgement","The World",
+        "Six of Swords","Six of Pentacles"
+      ]),
+      rupture: makeSignalSet([
+        "Death","The Tower","Ten of Swords","Three of Swords",
+        "Five of Cups","Five of Pentacles","Eight of Cups"
+      ]),
+      defense: makeSignalSet([
+        "The High Priestess","The Hermit","Seven of Wands","Nine of Wands",
+        "Four of Pentacles","Two of Swords","Eight of Swords","Seven of Swords"
+      ]),
+      open: makeSignalSet([
+        "The Fool","The Empress","The Star","The Sun",
+        "Ace of Cups","Two of Cups","Three of Cups","Page of Cups","Knight of Cups"
+      ]),
+      stable: makeSignalSet([
+        "The Emperor","The Hierophant","Justice","Temperance","The World",
+        "Four of Wands","Six of Pentacles","Ten of Pentacles",
+        "Knight of Pentacles","Queen of Pentacles","King of Pentacles"
+      ]),
+      volatile: makeSignalSet([
+        "The Fool","The Devil","The Tower","The Moon","Five of Wands",
+        "Seven of Swords","Knight of Wands","Ten of Swords"
+      ]),
+      newOpportunity: makeSignalSet([
+        "The Fool","The Magician","The Star","The Sun","The Lovers",
+        "Ace of Cups","Ace of Wands","Ace of Pentacles",
+        "Page of Cups","Page of Wands","Three of Cups"
+      ]),
+      social: makeSignalSet([
+        "The Empress","The Sun","Two of Cups","Three of Cups","Four of Wands",
+        "Six of Cups","Page of Cups","Knight of Cups"
+      ]),
+      risk: makeSignalSet([
+        "The Devil","The Tower","The Moon","Seven of Swords","Five of Pentacles",
+        "Ten of Swords","Three of Swords","Nine of Swords","Five of Cups","Five of Wands"
+      ]),
+      moneyPositive: makeSignalSet([
+        "The Magician","The Emperor","Wheel of Fortune","The World",
+        "Ace of Pentacles","Three of Pentacles","Six of Pentacles","Eight of Pentacles",
+        "Nine of Pentacles","Ten of Pentacles","Queen of Pentacles","King of Pentacles"
+      ]),
+      careerPositive: makeSignalSet([
+        "The Magician","The Emperor","The Chariot","Strength","The World",
+        "Ace of Wands","Three of Pentacles","Six of Wands","Eight of Pentacles",
+        "Queen of Wands","King of Pentacles"
+      ])
+    };
+
+    function clampNumber(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function signalHas(group, cardName) {
+      const set = READING_SIGNAL_GROUPS[group];
+      return !!(set && set.has(cardName));
+    }
+
+    function getDimensionSignal(item, dimension) {
+      const card = item.card;
+      const en = card.en;
+      const suit = card.suit;
+      const rank = getCardRank(card);
+      const reversed = !!item.reversed;
+      const polarity = clampNumber(getCardPolarity(item) / 2.25, -1, 1);
+      let score = 0;
+
+      if (dimension === "flow") {
+        score += polarity * 1.35;
+      } else if (dimension === "action") {
+        if (signalHas("action", en)) score += 1.05;
+        if (signalHas("contact", en)) score += .30;
+        if (signalHas("slow", en)) score -= .72;
+        if (signalHas("silence", en)) score -= .55;
+        if (suit === "Wands") score += .14;
+        if (rank && COURT_RANKS.has(rank)) score += .08;
+        if (reversed) score -= .48;
+      } else if (dimension === "speed") {
+        if (signalHas("fast", en)) score += 1.20;
+        if (signalHas("slow", en)) score -= 1.00;
+        if (signalHas("action", en)) score += .18;
+        if (reversed) score -= .42;
+      } else if (dimension === "hesitation") {
+        if (signalHas("slow", en)) score += .95;
+        if (signalHas("silence", en)) score += .72;
+        if (signalHas("defense", en)) score += .48;
+        if (signalHas("fast", en)) score -= .65;
+        if (signalHas("action", en)) score -= .22;
+        if (reversed) score += .38;
+      } else if (dimension === "conversation") {
+        if (signalHas("contact", en)) score += .82;
+        if (signalHas("relation", en)) score += .38;
+        if (signalHas("stable", en)) score += .20;
+        if (signalHas("silence", en)) score -= .82;
+        if (signalHas("rupture", en)) score -= .42;
+        if (reversed) score -= .30;
+      } else if (dimension === "emotion") {
+        if (suit === "Cups") score += .42;
+        if (signalHas("relation", en)) score += .66;
+        if (signalHas("attachment", en)) score += .62;
+        if (signalHas("rupture", en)) score += .24;
+        if (en === "The Lovers" || en === "The Devil" || en === "The Moon") score += .32;
+        if (reversed) score -= .06;
+      } else if (dimension === "attraction") {
+        if (signalHas("relation", en)) score += .82;
+        if (signalHas("open", en)) score += .42;
+        if (en === "The Devil") score += .45;
+        if (signalHas("rupture", en)) score -= .58;
+        if (signalHas("silence", en)) score -= .25;
+        if (reversed) score -= .28;
+      } else if (dimension === "lingering") {
+        if (signalHas("attachment", en)) score += 1.08;
+        if (signalHas("relation", en)) score += .20;
+        if (en === "Six of Cups" || en === "Judgement") score += .35;
+        if (en === "The World" || en === "Eight of Cups") score -= .52;
+        if (en === "Death" && !reversed) score -= .42;
+        if (reversed) score += .14;
+      } else if (dimension === "defense") {
+        if (signalHas("defense", en)) score += 1.02;
+        if (signalHas("silence", en)) score += .42;
+        if (signalHas("open", en)) score -= .58;
+        if (reversed) score += .30;
+      } else if (dimension === "connection") {
+        if (signalHas("relation", en)) score += 1.00;
+        if (signalHas("social", en)) score += .28;
+        if (signalHas("attachment", en)) score += .20;
+        if (signalHas("rupture", en)) score -= .82;
+        if (signalHas("defense", en)) score -= .30;
+        if (reversed) score -= .24;
+      } else if (dimension === "recovery") {
+        if (signalHas("healing", en)) score += .96;
+        if (signalHas("relation", en)) score += .58;
+        if (signalHas("rupture", en)) score -= .82;
+        if (signalHas("risk", en)) score -= .34;
+        if (reversed) score -= .20;
+      } else if (dimension === "newOpportunity") {
+        if (signalHas("newOpportunity", en)) score += 1.00;
+        if (signalHas("social", en)) score += .30;
+        if (signalHas("silence", en)) score -= .45;
+        if (signalHas("defense", en)) score -= .22;
+        if (reversed) score -= .24;
+      } else if (dimension === "meeting") {
+        if (signalHas("social", en)) score += .82;
+        if (signalHas("contact", en)) score += .30;
+        if (signalHas("action", en)) score += .24;
+        if (signalHas("slow", en)) score -= .44;
+        if (signalHas("silence", en)) score -= .52;
+        if (reversed) score -= .22;
+      } else if (dimension === "openness") {
+        if (signalHas("open", en)) score += .95;
+        if (suit === "Cups") score += .20;
+        if (signalHas("defense", en)) score -= .72;
+        if (signalHas("silence", en)) score -= .42;
+        if (reversed) score -= .24;
+      } else if (dimension === "growth") {
+        score += polarity * .42;
+        if (signalHas("relation", en)) score += .48;
+        if (signalHas("healing", en)) score += .50;
+        if (signalHas("stable", en)) score += .30;
+        if (signalHas("risk", en)) score -= .58;
+        if (reversed) score -= .16;
+      } else if (dimension === "stability") {
+        if (signalHas("stable", en)) score += 1.00;
+        if (suit === "Pentacles") score += .22;
+        if (signalHas("volatile", en)) score -= .82;
+        if (signalHas("risk", en)) score -= .36;
+        if (reversed) score -= .28;
+      } else if (dimension === "risk" || dimension === "caution") {
+        if (signalHas("risk", en)) score += 1.05;
+        if (signalHas("volatile", en)) score += .48;
+        if (suit === "Swords") score += .12;
+        if (signalHas("stable", en)) score -= .46;
+        if (signalHas("healing", en)) score -= .22;
+        if (reversed) score += .22;
+      } else if (dimension === "moneyOpportunity") {
+        score += polarity * .28;
+        if (signalHas("moneyPositive", en)) score += 1.02;
+        if (signalHas("risk", en)) score -= .72;
+        if (reversed) score -= .22;
+      } else if (dimension === "careerGrowth") {
+        score += polarity * .26;
+        if (signalHas("careerPositive", en)) score += 1.02;
+        if (signalHas("action", en)) score += .18;
+        if (signalHas("risk", en)) score -= .55;
+        if (reversed) score -= .20;
+      }
+
+      return clampNumber(score, -1.65, 1.65);
+    }
+
+    function getMetricPositionWeight(config, index, dimension) {
+      const steps = config && config.steps ? config.steps : [];
+      const step = String(steps[index] || "");
+      let weight = 1;
+
+      if (/최종|결과|마무리/.test(step) && /flow|recovery|growth|stability/.test(dimension)) weight += .55;
+      if (/향후 행동|행동|먼저 연락/.test(step) && /action|communication|speed/.test(dimension)) weight += .55;
+      if (/연락|메시지|대화/.test(step) && /action|communication|conversation|speed|hesitation/.test(dimension)) weight += .50;
+      if (/장애|가로막|방해|주의|두려움/.test(step) && /risk|caution|hesitation|defense/.test(dimension)) weight += .60;
+      if (/감정|마음|속마음|겉마음|의식/.test(step) && /emotion|attraction|lingering|defense/.test(dimension)) weight += .48;
+      if (/만남|새 인연|관계 진전|연결점/.test(step) && /meeting|newOpportunity|connection|growth/.test(dimension)) weight += .50;
+      if (/재회|회복/.test(step) && /connection|recovery|lingering/.test(dimension)) weight += .50;
+
+      if (config && config.mode === "spread" && index === selectedCards.length - 1 &&
+          /flow|recovery|growth|stability/.test(dimension)) {
+        weight += .18;
+      }
+      return weight;
+    }
+
+    const CATEGORY_INDICATOR_DEFS = {
+      contact: [
+        { label: "연락 행동력", dimension: "action" },
+        { label: "속도", dimension: "speed" },
+        { label: "망설임·지연", dimension: "hesitation", risk: true },
+        { label: "대화 지속력", dimension: "conversation" },
+        { label: "전체 흐름", dimension: "flow" }
+      ],
+      reunion: [
+        { label: "감정 잔존", dimension: "lingering" },
+        { label: "재접점 힘", dimension: "connection" },
+        { label: "장애물", dimension: "risk", risk: true },
+        { label: "상대 행동력", dimension: "action" },
+        { label: "관계 회복 흐름", dimension: "recovery" }
+      ],
+      mind: [
+        { label: "감정 강도", dimension: "emotion" },
+        { label: "호감·끌림", dimension: "attraction" },
+        { label: "미련·집중", dimension: "lingering" },
+        { label: "방어심", dimension: "defense", risk: true },
+        { label: "행동 의지", dimension: "action" }
+      ],
+      love: [
+        { label: "새 인연·접점 기회", dimension: "newOpportunity" },
+        { label: "만남·교류 흐름", dimension: "meeting" },
+        { label: "감정 개방성", dimension: "openness" },
+        { label: "관계 발전성", dimension: "growth" },
+        { label: "주의도", dimension: "caution", risk: true }
+      ],
+      money: [
+        { label: "기회·확장성", dimension: "moneyOpportunity" },
+        { label: "안정성", dimension: "stability" },
+        { label: "실행력", dimension: "action" },
+        { label: "위험도", dimension: "risk", risk: true },
+        { label: "전체 흐름", dimension: "flow" }
+      ],
+      career: [
+        { label: "기회·성장성", dimension: "careerGrowth" },
+        { label: "실행력", dimension: "action" },
+        { label: "안정성", dimension: "stability" },
+        { label: "장애물", dimension: "risk", risk: true },
+        { label: "전체 흐름", dimension: "flow" }
+      ],
+      general: [
+        { label: "긍정 흐름", dimension: "flow" },
+        { label: "실행력", dimension: "action" },
+        { label: "속도", dimension: "speed" },
+        { label: "장애물", dimension: "risk", risk: true },
+        { label: "안정성", dimension: "stability" }
+      ]
+    };
+
+    function getIndicatorBand(score, isRisk) {
+      if (isRisk) {
+        if (score >= 72) return "강함";
+        if (score >= 58) return "다소 높음";
+        if (score >= 43) return "보통";
+        if (score >= 28) return "낮음";
+        return "매우 낮음";
+      }
+      if (score >= 72) return "강함";
+      if (score >= 58) return "우세";
+      if (score >= 43) return "보통";
+      if (score >= 28) return "약함";
+      return "매우 약함";
+    }
+
+    function buildReadingIndicators(overall) {
+      if (!overall || !selectedCards.length) return { items: [], conclusion: "" };
+      const defs = CATEGORY_INDICATOR_DEFS[overall.category] || CATEGORY_INDICATOR_DEFS.general;
+      const verdict = buildSpreadVerdict(overall);
+      const indicators = defs.map(function(def) {
+        let weightedSum = 0;
+        let weightTotal = 0;
+        const contributions = [];
+
+        selectedCards.forEach(function(item, index) {
+          let signal = getDimensionSignal(item, def.dimension);
+          const weight = getMetricPositionWeight(overall.config, index, def.dimension);
+          weightedSum += signal * weight;
+          weightTotal += weight;
+          contributions.push({
+            card: item.card.ko,
+            value: signal * weight
+          });
+        });
+
+        let average = weightTotal ? weightedSum / weightTotal : 0;
+        let score = Math.round(clampNumber(50 + average * 29, 0, 100));
+
+        if (def.dimension === "flow" && verdict) {
+          score = Math.round(clampNumber(50 + verdict.score * 24, 0, 100));
+        }
+
+        contributions.sort(function(a, b) {
+          return Math.abs(b.value) - Math.abs(a.value);
+        });
+        const strongest = contributions.filter(function(x) {
+          return Math.abs(x.value) >= .34;
+        }).slice(0, 2).map(function(x) {
+          return x.card;
+        });
+
+        const band = getIndicatorBand(score, !!def.risk);
+        let detail = "";
+        if (def.risk) {
+          if (score >= 72) detail = "이 요소가 리딩에서 강하게 작용합니다.";
+          else if (score >= 58) detail = "무시하기 어려운 변수로 작용합니다.";
+          else if (score >= 43) detail = "일부 변수는 있지만 압도적이지는 않습니다.";
+          else detail = "현재 배열에서는 비교적 약한 변수입니다.";
+        } else {
+          if (score >= 72) detail = "이 흐름을 지지하는 카드가 뚜렷하게 모여 있습니다.";
+          else if (score >= 58) detail = "긍정 신호가 조금 더 우세합니다.";
+          else if (score >= 43) detail = "지지와 제약 신호가 섞여 있습니다.";
+          else if (score >= 28) detail = "이 흐름을 밀어주는 힘이 다소 약합니다.";
+          else detail = "현재 배열에서는 이 흐름이 매우 약하게 나타납니다.";
+        }
+        if (strongest.length) detail += " 주요 카드: " + strongest.join(", ") + ".";
+
+        return {
+          label: def.label,
+          dimension: def.dimension,
+          score: score,
+          band: band,
+          risk: !!def.risk,
+          detail: detail
+        };
+      });
+
+      return {
+        items: indicators,
+        conclusion: buildIndicatorConclusion(overall.category, indicators)
+      };
+    }
+
+    function findIndicator(items, dimension) {
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].dimension === dimension) return items[i];
+      }
+      return { score: 50, label: "", dimension: dimension };
+    }
+
+    function buildIndicatorConclusion(category, items) {
+      const get = function(dim) { return findIndicator(items, dim).score; };
+      let text = "";
+
+      if (category === "contact") {
+        const action = get("action"), speed = get("speed"), hesitation = get("hesitation"), conversation = get("conversation");
+        if (action >= 65 && hesitation < 58) text = "카드 구성에서는 연락을 생각으로만 두기보다 실제 행동으로 옮길 힘이 비교적 우세합니다.";
+        else if (action < 45 && hesitation >= 62) text = "카드 구성에서는 연락 욕구보다 망설임·침묵·지연 요인이 더 강하게 잡힙니다.";
+        else text = "연락 신호와 망설임이 함께 있어, 실제 행동 여부는 타이밍과 상대의 심리적 부담에 좌우되기 쉬운 구성입니다.";
+        text += speed >= 65 ? " 움직임은 빠른 편입니다." : speed <= 40 ? " 속도는 느리게 잡힙니다." : " 속도는 중간 정도입니다.";
+        if (conversation >= 65) text += " 연락이 시작된다면 대화가 이어질 힘도 비교적 좋습니다.";
+      } else if (category === "reunion") {
+        const lingering = get("lingering"), connection = get("connection"), risk = get("risk"), action = get("action"), recovery = get("recovery");
+        if (lingering >= 65 && connection >= 60 && risk < 62) text = "과거 감정의 잔존과 재접점 신호가 함께 있어 관계를 다시 연결할 여지가 비교적 강한 구성입니다.";
+        else if (risk >= 68 && action < 48) text = "감정이 남아 있더라도 장애물과 행동 부족이 더 크게 작용해 재접점이 쉽게 현실화되기 어려운 구성입니다.";
+        else text = "미련·재접점·장애 요소가 섞여 있어 감정 자체보다 실제 행동과 장애물 해소가 더 중요한 배열입니다.";
+        if (recovery >= 65) text += " 회복 방향의 카드 지원도 비교적 강합니다.";
+      } else if (category === "mind") {
+        const emotion = get("emotion"), attraction = get("attraction"), defense = get("defense"), action = get("action");
+        if (emotion >= 68 && attraction >= 62 && defense < 60) text = "감정과 끌림이 비교적 직접적으로 드러나는 구성입니다.";
+        else if (emotion >= 62 && defense >= 65) text = "감정의 강도는 있으나 방어심과 숨김이 강해 겉으로 드러나는 행동과 속마음이 다를 수 있는 구성입니다.";
+        else text = "감정·호감·방어가 혼재해 한 가지 감정으로 단정하기보다 표현 방식과 행동 의지를 함께 봐야 하는 배열입니다.";
+        if (action < 45) text += " 특히 행동 의지는 감정 강도보다 낮게 잡힙니다.";
+      } else if (category === "love") {
+        const newcomer = get("newOpportunity"), meeting = get("meeting"), openness = get("openness"), growth = get("growth"), caution = get("caution");
+        if (newcomer >= 65 && meeting >= 58 && caution < 60) text = "새로운 접점과 만남의 흐름이 비교적 살아 있고, 실제 관계로 이어질 여지도 있는 구성입니다.";
+        else if (caution >= 68) text = "기회 신호가 있더라도 경계·불확실성·상처 같은 주의 요소가 강하므로 속도를 조절하는 편이 좋은 구성입니다.";
+        else text = "기회와 주의 요소가 함께 있어, 감정 개방성과 실제 만남 여부에 따라 흐름이 달라지기 쉬운 배열입니다.";
+        if (openness >= 65 && growth >= 60) text += " 감정 개방성과 관계 발전성도 함께 받쳐줍니다.";
+      } else if (category === "money") {
+        const opportunity = get("moneyOpportunity"), stability = get("stability"), risk = get("risk"), action = get("action");
+        if (opportunity >= 65 && stability >= 58 && risk < 60) text = "기회·안정·실행 신호가 균형 있게 받쳐주는 비교적 건전한 금전 구성입니다.";
+        else if (risk >= 68) text = "수익 기대보다 변동성·손실 위험·판단 오류 신호가 더 강하므로 방어적인 접근이 필요한 구성입니다.";
+        else text = "기회와 위험이 함께 있어 확장보다 조건 확인과 자금 관리가 중요한 배열입니다.";
+        if (action < 42) text += " 실행 속도를 늦추고 재확인하는 쪽이 카드 구성과 더 맞습니다.";
+      } else if (category === "career") {
+        const growth = get("careerGrowth"), action = get("action"), stability = get("stability"), risk = get("risk");
+        if (growth >= 65 && action >= 58 && risk < 60) text = "성장 기회와 실행력이 함께 살아 있어 실제 변화를 만들기 좋은 직업 흐름으로 읽힙니다.";
+        else if (risk >= 68) text = "기회보다 장애·갈등·불안정 신호가 강하므로 무리한 전환보다 문제 정리가 먼저인 구성입니다.";
+        else text = "성장 가능성과 현실 제약이 함께 있어 실행 계획과 안정성 확보가 결과를 좌우하기 쉬운 배열입니다.";
+        if (stability >= 65) text += " 안정 기반은 비교적 잘 받쳐주는 편입니다.";
+      } else {
+        const flow = get("flow"), action = get("action"), risk = get("risk"), stability = get("stability");
+        if (flow >= 65 && action >= 58 && risk < 60) text = "전체 흐름과 실행력이 함께 받쳐주는 비교적 전진적인 카드 구성입니다.";
+        else if (risk >= 68) text = "현재는 긍정 신호보다 장애·불확실성 관리가 더 중요한 배열입니다.";
+        else text = "긍정과 제약 요소가 혼재해 한 번의 결론보다 행동 방식과 조건 변화가 중요하게 작용하는 구성입니다.";
+        if (stability >= 65) text += " 안정성은 비교적 높게 잡힙니다.";
+      }
+
+      return text;
+    }
+
+    function buildCorePatternAnalysis(category) {
+      if (!selectedCards.length) return [];
+      const patterns = [];
+      const total = selectedCards.length;
+      const stats = getReadingStats();
+
+      function addPattern(title, text, priority) {
+        const key = title + "|" + text;
+        for (let i = 0; i < patterns.length; i++) {
+          if (patterns[i].key === key) return;
+        }
+        patterns.push({ key: key, title: title, text: text, priority: priority || 0 });
+      }
+
+      const majorRatio = total ? stats.major / total : 0;
+      if (stats.major >= 3 && majorRatio >= .35) {
+        addPattern(
+          "메이저 아르카나 집중",
+          "메이저가 " + stats.major + "/" + total + "장으로 높아, 단기 감정보다 중요한 선택·전환·관계의 큰 방향이 리딩을 주도합니다.",
+          95
+        );
+      }
+
+      const suitEntries = Object.entries(stats.suits).sort(function(a,b){ return b[1] - a[1]; });
+      if (suitEntries.length && suitEntries[0][1] >= Math.max(3, Math.ceil(total * .4))) {
+        const suit = suitEntries[0][0];
+        const count = suitEntries[0][1];
+        const meta = SUIT_READING_META[suit];
+        addPattern(
+          (meta ? meta.ko : suit) + " 수트 편중",
+          (meta ? meta.ko : suit) + "이 " + count + "장으로 반복되어 " + (meta ? meta.theme : "같은 주제") + "가 전체 리딩의 중심축으로 작용합니다.",
+          88
+        );
+      }
+
+      const rankCounts = {};
+      selectedCards.forEach(function(item) {
+        const rank = getCardRank(item.card);
+        if (rank) rankCounts[rank] = (rankCounts[rank] || 0) + 1;
+      });
+      Object.keys(rankCounts)
+        .filter(function(rank){ return rankCounts[rank] >= 2 && !COURT_RANKS.has(rank); })
+        .sort(function(a,b){ return rankCounts[b] - rankCounts[a]; })
+        .slice(0,2)
+        .forEach(function(rank) {
+          const count = rankCounts[rank];
+          addPattern(
+            "같은 숫자 반복 · " + (MINOR_RANK_KO[rank] || rank),
+            (MINOR_RANK_KO[rank] || rank) + " 계열이 " + count + "장 반복되어 같은 단계의 과제나 사건 패턴이 여러 영역에서 되풀이되고 있음을 강조합니다.",
+            84 + count
+          );
+        });
+
+      const courtItems = selectedCards.filter(function(item) {
+        const rank = getCardRank(item.card);
+        return rank && COURT_RANKS.has(rank);
+      });
+      if (courtItems.length >= 3) {
+        addPattern(
+          "궁정카드 집중",
+          "궁정카드가 " + courtItems.length + "장으로 많아 사건 자체보다 특정 인물의 태도·성격·역할 또는 실제 행동 주체가 중요하게 작용합니다.",
+          86
+        );
+      }
+
+      if (stats.reversed === 0 && total >= 3) {
+        addPattern("정방향 집중", "모든 카드가 정방향이라 메시지가 비교적 외부 행동과 사건으로 직접 드러나는 편입니다.", 70);
+      } else if (stats.reversed / total >= .5) {
+        addPattern("역방향 집중", "역방향이 " + stats.reversed + "/" + total + "장으로 많아 지연·내면화·재검토·표현되지 않은 문제가 강하게 작용합니다.", 82);
+      }
+
+      for (let i = 0; i <= selectedCards.length - 3; i++) {
+        const trio = selectedCards.slice(i, i + 3);
+        if (trio.every(function(x){ return x.card.arcana === "Major"; })) {
+          addPattern(
+            "메이저 3장 연속",
+            (i + 1) + "–" + (i + 3) + "번 자리에 메이저가 연속되어 이 구간이 리딩의 핵심 전환점으로 작용합니다.",
+            94
+          );
+          break;
+        }
+        const firstSuit = trio[0].card.suit;
+        if (firstSuit && trio.every(function(x){ return x.card.suit === firstSuit; })) {
+          const meta = SUIT_READING_META[firstSuit];
+          addPattern(
+            "3장 연속 수트 · " + (meta ? meta.ko : firstSuit),
+            (i + 1) + "–" + (i + 3) + "번 자리가 같은 수트로 이어져 한 주제가 단계적으로 누적·강조되는 흐름입니다.",
+            90
+          );
+          break;
+        }
+      }
+
+      Object.keys(SUIT_READING_META).forEach(function(suit) {
+        const nums = selectedCards
+          .filter(function(item){ return item.card.suit === suit; })
+          .map(function(item){ return MINOR_RANK_ORDER[getCardRank(item.card)]; })
+          .filter(function(v){ return !!v; })
+          .sort(function(a,b){ return a-b; });
+        const unique = nums.filter(function(v,i,a){ return i === 0 || v !== a[i-1]; });
+        let run = [];
+        let bestRun = [];
+        unique.forEach(function(v) {
+          if (!run.length || v === run[run.length - 1] + 1) run.push(v);
+          else run = [v];
+          if (run.length > bestRun.length) bestRun = run.slice();
+        });
+        if (bestRun.length >= 3) {
+          const meta = SUIT_READING_META[suit];
+          addPattern(
+            "연속 숫자 흐름 · " + (meta ? meta.ko : suit),
+            (meta ? meta.ko : suit) + "에서 " + bestRun[0] + " → " + bestRun[bestRun.length - 1] + "의 연속 흐름이 잡혀, 한 사건이 단계적으로 진행·축적되는 구조가 강조됩니다.",
+            91
+          );
+        }
+      });
+
+      let oppositionCount = 0;
+      for (let i = 0; i < selectedCards.length && oppositionCount < 2; i++) {
+        for (let j = i + 1; j < selectedCards.length && oppositionCount < 2; j++) {
+          const key = pairKey(selectedCards[i].card, selectedCards[j].card);
+          if (CORE_OPPOSITION_READINGS[key]) {
+            addPattern(
+              "상반 에너지 · " + selectedCards[i].card.ko + " ↔ " + selectedCards[j].card.ko,
+              CORE_OPPOSITION_READINGS[key],
+              93
+            );
+            oppositionCount++;
+          }
+        }
+      }
+
+      const polarities = selectedCards.map(getCardPolarity);
+      const hasStrongPositive = polarities.some(function(x){ return x >= 1.25; });
+      const hasStrongNegative = polarities.some(function(x){ return x <= -1.25; });
+      if (hasStrongPositive && hasStrongNegative && total >= 3) {
+        addPattern(
+          "강한 긍정·부정 카드 공존",
+          "강한 지지 카드와 강한 경고 카드가 동시에 있어, 결과가 한 방향으로 고정되기보다 조건·행동·타이밍에 따라 크게 갈릴 수 있습니다.",
+          89
+        );
+      }
+
+      if (category === "contact") {
+        const hasFast = selectedCards.some(function(x){ return signalHas("fast", x.card.en); });
+        const hasSilence = selectedCards.some(function(x){ return signalHas("silence", x.card.en); });
+        if (hasFast && hasSilence) {
+          addPattern("연락 속도 충돌", "빠르게 움직이는 연락 카드와 침묵·정체 카드가 함께 있어, 생각은 급해도 실제 전송이나 답장은 지연될 수 있는 구조입니다.", 96);
+        }
+      } else if (category === "reunion") {
+        const hasPast = selectedCards.some(function(x){ return signalHas("attachment", x.card.en); });
+        const hasBreak = selectedCards.some(function(x){ return signalHas("rupture", x.card.en); });
+        const hasHeal = selectedCards.some(function(x){ return signalHas("healing", x.card.en); });
+        if (hasPast && hasBreak && hasHeal) {
+          addPattern("재회 갈림길", "과거 감정·상처·회복 카드가 동시에 있어 단순한 미련보다 ‘무엇을 정리하고 다시 연결할 것인가’가 핵심 과제로 보입니다.", 97);
+        }
+      } else if (category === "love") {
+        const hasNew = selectedCards.some(function(x){ return signalHas("newOpportunity", x.card.en); });
+        const hasDefense = selectedCards.some(function(x){ return signalHas("defense", x.card.en); });
+        if (hasNew && hasDefense) {
+          addPattern("기회와 경계의 공존", "새로운 접점 신호는 있으나 방어·거리두기 카드도 있어, 기회 자체보다 마음을 열고 반응하는 방식이 중요합니다.", 92);
+        }
+      }
+
+      return patterns
+        .sort(function(a,b){ return b.priority - a.priority; })
+        .slice(0, 6);
+    }
+
+    function renderCorePatternAnalysisHtml(category) {
+      const patterns = buildCorePatternAnalysis(category);
+      const body = patterns.length
+        ? '<div class="core-pattern-grid">' + patterns.map(function(p) {
+            return '<div class="core-pattern-card"><strong>' + escapeHtml(p.title) + '</strong><span>' + escapeHtml(p.text) + '</span></div>';
+          }).join("") + '</div>'
+        : '<div class="core-pattern-card"><span>현재 배열에서는 강하게 반복되는 구조적 패턴이 적습니다. 개별 자리와 카드 간 연결을 중심으로 읽는 편이 좋습니다.</span></div>';
+
+      return '<div class="analysis-wide">' +
+        '<div class="deep-analysis-title"><span>이번 리딩의 핵심 패턴</span><small>반복 숫자 · 수트 · 메이저 · 궁정카드 · 3장 구조 · 상반 카드 감지</small></div>' +
+        body +
+        '</div>';
+    }
+
+    function renderReadingIndicatorsHtml(overall) {
+      const bundle = buildReadingIndicators(overall);
+      if (!bundle.items.length) return "";
+
+      const rows = bundle.items.map(function(item) {
+        return '<div class="indicator-item">' +
+          '<div class="indicator-head">' +
+            '<span class="indicator-label">' + escapeHtml(item.label) + '</span>' +
+            '<span class="indicator-score">' + item.score + ' / 100 <em>' + escapeHtml(item.band) + '</em></span>' +
+          '</div>' +
+          '<div class="indicator-track"><div class="indicator-fill" style="width:' + item.score + '%"></div></div>' +
+          '<div class="indicator-detail">' + escapeHtml(item.detail) + '</div>' +
+        '</div>';
+      }).join("");
+
+      return '<div class="analysis-wide">' +
+        '<div class="deep-analysis-title"><span>카드 구성 지표</span><small>질문 분야와 자리 가중치를 반영</small></div>' +
+        '<div class="reading-indicator-note">※ 이 점수는 실제 사건의 확률이 아니라, 현재 뽑힌 카드 배열에서 해당 상징이 얼마나 강하게 나타나는지를 100점 기준으로 환산한 참고 지표입니다.</div>' +
+        '<div class="indicator-grid">' + rows + '</div>' +
+        '<div class="indicator-conclusion"><strong>핵심 결론 · </strong>' + escapeHtml(bundle.conclusion) + '</div>' +
+      '</div>';
+    }
+
+
     function buildCombinationReadings(category) {
       if (selectedCards.length < 2) return [];
       const out = [];
@@ -4265,6 +5102,26 @@
         lines.push("");
       }
 
+
+      const corePatterns = buildCorePatternAnalysis(overall.category);
+      if (corePatterns.length) {
+        lines.push("[핵심 패턴 분석]");
+        corePatterns.forEach(function(p) {
+          lines.push("- " + p.title + ": " + p.text);
+        });
+        lines.push("");
+      }
+
+      const indicatorBundle = buildReadingIndicators(overall);
+      if (indicatorBundle.items.length) {
+        lines.push("[카드 구성 지표]");
+        lines.push("※ 실제 사건의 확률이 아니라 현재 카드 배열의 상징적 강도 지표입니다.");
+        indicatorBundle.items.forEach(function(item) {
+          lines.push("- " + item.label + ": " + item.score + " / 100 (" + item.band + ")");
+        });
+        lines.push("핵심 결론: " + indicatorBundle.conclusion, "");
+      }
+
       selectedCards.forEach((item, index) => {
         const step = config.steps?.[index] || (config.mode === "free" ? `${index + 1}번째 카드` : `${index + 1}번째 자리`);
         lines.push(`[${index + 1}. ${step}]`);
@@ -4317,13 +5174,18 @@
       }).join("");
 
       const suitText = Object.entries(overall.stats.suits)
-        .map(([suit, count]) => `${SUIT_READING_META[suit].ko} ${count}`)
+        .map(function(entry) {
+          const suit = entry[0], count = entry[1];
+          return SUIT_READING_META[suit].ko + " " + count;
+        })
         .join(" · ");
       autoReadingPatterns.innerHTML = `
         <div class="auto-pattern"><strong>메이저 아르카나</strong><span>${overall.stats.major}/${overall.stats.total}장 · ${overall.stats.major / overall.stats.total >= .4 ? "큰 전환·중요한 선택의 비중이 큼" : "일상적 상황과 현실 흐름이 함께 작용"}</span></div>
         <div class="auto-pattern"><strong>정·역방향</strong><span>정방향 ${overall.stats.total - overall.stats.reversed} · 역방향 ${overall.stats.reversed}</span></div>
         <div class="auto-pattern"><strong>수트 구성</strong><span>${suitText}</span></div>
         ${renderCombinationHtml(overall.category)}
+        ${renderCorePatternAnalysisHtml(overall.category)}
+        ${renderReadingIndicatorsHtml(overall)}
       `;
       autoReadingCopyStatus.textContent = "";
       autoReadingPanel.classList.add("visible");
